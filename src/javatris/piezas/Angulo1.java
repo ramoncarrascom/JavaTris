@@ -7,13 +7,22 @@ package javatris.piezas;
  * @version 0.1 2017/05/14
  *
  */
-public class angulo extends pieza {
+public class Angulo1 extends Pieza {
 
 	/**
-	 * Constructor
+	 * Constructor sin parámetros
 	 */
-	public angulo() {
-		super();
+	public Angulo1() {
+		this(0,0);
+	}
+	
+	/**
+	 * Constructor indicando posición inicial
+	 * @param posX posición X inicial
+	 * @param posY posición Y inicial
+	 */
+	public Angulo1(int posX, int posY) {
+		super(posX, posY);
 		
 		// forma con 0º
 		forma[0][0]=new int[]{0,0,0,0,0};

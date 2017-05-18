@@ -21,6 +21,16 @@ import javatris.tablero.*;
 public class Javatris extends Applet implements Runnable, KeyListener {
 	
 	/**
+	 * Constante indicando el ancho del tablero
+	 */
+	private final int anchoTablero=15;
+	
+	/**
+	 * Constante indicando el alto del tablero
+	 */
+	private final int altoTablero=25;
+	
+	/**
 	 * Imagen que utilizaremos para pintar temporalmente los elementos en pantalla
 	 * para pasarlos todos al Applet de una tacada
 	 */
@@ -54,10 +64,15 @@ public class Javatris extends Applet implements Runnable, KeyListener {
 	 */
 	private Thread caida;	
 	
-	private angulo miAngulo;
-	private tablero miTablero;
-	private barra miBarra;
-	private pieza piezaActual;
+	/**
+	 * Tablero donde se desarrollará el juego
+	 */
+	private Tablero miTablero;
+
+	/**
+	 * Pieza que está actualmente en juego
+	 */
+	private Pieza piezaActual;
 
 	/**
 	 * Procedimiento init del Applet, inicializa los valores con los que vamos a trabajar
@@ -79,15 +94,10 @@ public class Javatris extends Applet implements Runnable, KeyListener {
 		// Inicialización del intervalo de caída
 		intervaloCaida = 500;
 		
-		// Inicializamos algunas piezas
-		miAngulo = new angulo();
-		miAngulo.ponPosicion(10,20);
-		miBarra = new barra();
-		miBarra.ponPosicion(15, 10);
-		miTablero = new tablero(20,30,bloques,this);
-		miTablero.dibujaPieza(miAngulo);
+		// Inicializamos los componentes y obtenemos la primera pieza
+		miTablero = new Tablero(anchoTablero,altoTablero,bloques,this);
 		
-		piezaActual=miAngulo;
+		piezaActual=new Catalogo(miTablero).damePiezaRnd();
 		
 		// Manejadores de eventos
 		addKeyListener(this);
@@ -107,7 +117,7 @@ public class Javatris extends Applet implements Runnable, KeyListener {
 		dobleBuffer.setColor(Color.black);
 		miTablero.dibujaTablero(dobleBuffer);
 		
-		dobleBuffer.drawString("X " + piezaActual.dameX() + " Y " + piezaActual.dameY(), 50, 50);
+		// dobleBuffer.drawString("X " + piezaActual.dameX() + " Y " + piezaActual.dameY(), 50, 50);
 		
 		g.drawImage(imagenDb, 0, 0, this);		
 		
@@ -158,20 +168,33 @@ public class Javatris extends Applet implements Runnable, KeyListener {
 	 * Ciclo de cada paso del juego
 	 */
 	private void ciclo() {
-		// miAngulo.cae();
-		// miTablero.dibujaPieza(miAngulo);
+		comprobarSiSiguientePieza();
+		piezaActual.cae();
+		miTablero.dibujaPieza(piezaActual);
+	}
+	
+	/**
+	 * Comprueba si se dan las condiciones para cambiar de pieza. Si es así, fija la pieza
+	 * y obtiene la siguiente
+	 */
+	private void comprobarSiSiguientePieza(){
+		if (miTablero.colisionInferior(piezaActual)) {
+			miTablero.fijaPieza(piezaActual);
+			miTablero.quitaFilas();
+			piezaActual=new Catalogo(miTablero).damePiezaRnd();
+		}
 	}
 	
 	/**
 	 * Implementación del método run de la interfaz Runnable
 	 */
 	public void run() {
-		/*while (!miTablero.colisionInferior(miAngulo)){
+		while (true){
 			ciclo();
 			repaint();
 			try {Thread.sleep(intervaloCaida);}
 			catch (Exception e) {}
-		}*/
+		}
 	}
 	
 	/**
@@ -205,15 +228,21 @@ public class Javatris extends Applet implements Runnable, KeyListener {
 				piezaActual.ponPosicion(piezaActual.dameX()-1, piezaActual.dameY());
 			
 		if (tecla=='s') 
-			if (!miTablero.colisionInferior(piezaActual))
+			if (!miTablero.colisionInferior(piezaActual)){
+				comprobarSiSiguientePieza();
 				piezaActual.ponPosicion(piezaActual.dameX(), piezaActual.dameY()+1);
+			}				
 		
 		if (tecla=='d') 
 			if (!miTablero.colisionDerecha(piezaActual))
 				piezaActual.ponPosicion(piezaActual.dameX()+1, piezaActual.dameY());
 		
 		if (tecla=='z')
-			piezaActual.cambiaAngulo();
+		{
+			piezaActual.aumentaAngulo();
+			if (miTablero.haySuperposicion(piezaActual))
+				piezaActual.disminuyeAngulo();
+		}
 		
 		miTablero.dibujaPieza(piezaActual);
 		repaint();
