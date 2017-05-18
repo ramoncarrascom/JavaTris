@@ -82,5 +82,13 @@ public class pieza {
 	 */
 	public int[][] dameForma() { return forma[angulo]; }
 	
+	/**
+	 * Hace que la pieza caiga 1 posición
+	 */
+	public void cae()
+	{
+		posicionY+=1;
+	}
+	
 }
 

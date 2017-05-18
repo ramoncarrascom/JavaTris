@@ -5,6 +5,8 @@ package javatris;
 
 import java.applet.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 import javatris.piezas.*;
 import javatris.tablero.*;
@@ -16,7 +18,7 @@ import javatris.tablero.*;
  * @version 0.1 2017/05/15
  *
  */
-public class Javatris extends Applet {
+public class Javatris extends Applet implements Runnable, KeyListener {
 	
 	/**
 	 * Imagen que utilizaremos para pintar temporalmente los elementos en pantalla
@@ -35,28 +37,27 @@ public class Javatris extends Applet {
 	private int ancho, alto;
 	
 	/**
-	 * MediaTracker para la precarga de imágenes en el applet
+	 * Objeto Image que almacenará el repositorio de imágenes de bloque
 	 */
-	private MediaTracker mt;
+	private Image[] bloques;	
+	private String[] ficheros = {
+			 "img/bloque.gif"
+			,"img/obstaculo.gif"};
 	
 	/**
-	 * Objeto Image que almacenará la imagen del bloque
+	 * Indica los milisegundos de espera para el siguiente paso en la caída
 	 */
-	private Image bloque;
+	private int intervaloCaida;
 	
 	/**
-	 * Objeto Image que se utilizará en la precarga de imágenes
+	 * Hilo que controla la caída
 	 */
-	private Image imagenes;
-	
-	/**
-	 * Contiene el nombre del fichero de imagen del bloque
-	 */
-	private String img = "img/bloque.gif";
+	private Thread caida;	
 	
 	private angulo miAngulo;
 	private tablero miTablero;
 	private barra miBarra;
+	private pieza piezaActual;
 
 	/**
 	 * Procedimiento init del Applet, inicializa los valores con los que vamos a trabajar
@@ -68,21 +69,28 @@ public class Javatris extends Applet {
 		alto = (int) this.getBounds().getHeight();
 		
 		// Carga de las imágenes
-		precargaImg();
-		bloque = getImage(getCodeBase(),img);
+		bloques=new Image[ficheros.length];
+		cargaImg(bloques, ficheros);
 		
 		// Inicialización del doble buffer
 		imagenDb = createImage(ancho, alto);
 		dobleBuffer = imagenDb.getGraphics();
 		
+		// Inicialización del intervalo de caída
+		intervaloCaida = 500;
+		
 		// Inicializamos algunas piezas
 		miAngulo = new angulo();
-		miAngulo.ponPosicion(5,5);
+		miAngulo.ponPosicion(10,20);
 		miBarra = new barra();
-		miBarra.ponPosicion(10, 10);
-		miTablero = new tablero(20,40,bloque,this);
+		miBarra.ponPosicion(15, 10);
+		miTablero = new tablero(20,30,bloques,this);
 		miTablero.dibujaPieza(miAngulo);
-		miTablero.dibujaPieza(miBarra);
+		
+		piezaActual=miAngulo;
+		
+		// Manejadores de eventos
+		addKeyListener(this);
 		
 	}
 	
@@ -96,7 +104,10 @@ public class Javatris extends Applet {
 		dobleBuffer.setColor(Color.white);
 		dobleBuffer.fillRect(0, 0, ancho, alto);
 		
+		dobleBuffer.setColor(Color.black);
 		miTablero.dibujaTablero(dobleBuffer);
+		
+		dobleBuffer.drawString("X " + piezaActual.dameX() + " Y " + piezaActual.dameY(), 50, 50);
 		
 		g.drawImage(imagenDb, 0, 0, this);		
 		
@@ -115,11 +126,20 @@ public class Javatris extends Applet {
 	/**
 	 * Realiza la precarga de imágenes usando un MediaTracker
 	 */
-	private void precargaImg() {
+	private void cargaImg(Image[] repositorioImg, String[] ficheros) {
+
+		Image[] imagenesPrecarga;
+		MediaTracker mt;
 		
+		imagenesPrecarga = new Image[ficheros.length];
 		mt = new MediaTracker(this);
-		imagenes = getImage(getCodeBase(), img);
-		mt.addImage(imagenes, 0);
+		
+		for (int i=0; i<ficheros.length; i++)
+		{
+			imagenesPrecarga[i] = getImage(getCodeBase(), ficheros[i]);
+			mt.addImage(imagenesPrecarga[i], i);			
+		}
+
 		try	{
 			mt.waitForAll();
 		} catch(InterruptedException e) {};
@@ -128,6 +148,74 @@ public class Javatris extends Applet {
 			this.showStatus("Error en la precarga de imágenes");
 		} else {
 			this.showStatus("Precarga de imágenes correcta");
+			
+			for (int i=0; i<ficheros.length; i++)
+				repositorioImg[i] = getImage(getCodeBase(), ficheros[i]);
 		}
+	}
+	
+	/**
+	 * Ciclo de cada paso del juego
+	 */
+	private void ciclo() {
+		// miAngulo.cae();
+		// miTablero.dibujaPieza(miAngulo);
+	}
+	
+	/**
+	 * Implementación del método run de la interfaz Runnable
+	 */
+	public void run() {
+		/*while (!miTablero.colisionInferior(miAngulo)){
+			ciclo();
+			repaint();
+			try {Thread.sleep(intervaloCaida);}
+			catch (Exception e) {}
+		}*/
+	}
+	
+	/**
+	 * Sobrecarga del método start del applet
+	 */
+	public void start() {
+		caida = new Thread(this);
+		if (caida!=null) caida.start();
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyTyped(KeyEvent evento) {
+		char tecla=evento.getKeyChar();
+		if (tecla=='w') 
+				piezaActual.ponPosicion(piezaActual.dameX(), piezaActual.dameY()-1);
+			
+		if (tecla=='a') 
+			if (!miTablero.colisionIzquierda(piezaActual))
+				piezaActual.ponPosicion(piezaActual.dameX()-1, piezaActual.dameY());
+			
+		if (tecla=='s') 
+			if (!miTablero.colisionInferior(piezaActual))
+				piezaActual.ponPosicion(piezaActual.dameX(), piezaActual.dameY()+1);
+		
+		if (tecla=='d') 
+			if (!miTablero.colisionDerecha(piezaActual))
+				piezaActual.ponPosicion(piezaActual.dameX()+1, piezaActual.dameY());
+		
+		if (tecla=='z')
+			piezaActual.cambiaAngulo();
+		
+		miTablero.dibujaPieza(piezaActual);
+		repaint();
 	}
 }
