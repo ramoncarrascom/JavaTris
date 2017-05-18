@@ -8,13 +8,22 @@ package javatris.piezas;
  * @version 0.1 2017/05/14
  *
  */
-public class barra extends pieza{
+public class Barra extends Pieza{
 
 	/**
-	 * Constructor
+	 * Constructor sin parámetros
 	 */
-	public barra() {
-		super();
+	public Barra() {
+		this(0,0);
+	}
+	
+	/**
+	 * Constructor indicando la posición inicial de la pieza
+	 * @param posX
+	 * @param posY
+	 */
+	public Barra(int posX, int posY) {
+		super(posX, posY);
 		
 		// forma con 0º
 		forma[0][0]=new int[]{0,1,0,0,0};

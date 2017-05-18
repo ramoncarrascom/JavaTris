@@ -3,8 +3,6 @@
  */
 package javatris.piezas;
 
-import java.awt.Image;
-
 /**
  * Clase que contiene las propiedades y métodos comunes para todas las piezas. Todas deberán
  * heredar de esta clase
@@ -13,7 +11,7 @@ import java.awt.Image;
  * @version 0.1 2017/05/14
  *
  */
-public class pieza {
+public class Pieza {
 	
 	/** 
 	 * Contiene la definición de la forma de la figura
@@ -35,23 +33,42 @@ public class pieza {
 	private int posicionX, posicionY;
 	
 	/**
-	 * Constructor
+	 * Constructor sin parámetros
 	 */
-	protected pieza(){
+	protected Pieza(){
 		
 		// Inicialización de elementos
 		forma = new int[4][5][];
-		angulo = 0;		
+		angulo = 0;	
+	}
+	
+	/**
+	 * Constructor indicando la posición inicial de la pieza
+	 * @param posX posición inicial X de la pieza
+	 * @param posY posición inicial Y de la pieza
+	 */
+	protected Pieza(int posX, int posY)
+	{
+		this();
+		
+		posicionX = posX;
+		posicionY = posY;
 	}
 	
 	/**
 	 * Cambia el ángulo al siguiente disponible en la pieza
 	 */
-	public void cambiaAngulo(){
-		
+	public void aumentaAngulo(){		
 		angulo+=1;
-		if (angulo==4) angulo=0;
-		
+		if (angulo==4) angulo=0;		
+	}
+	
+	/**
+	 * Disminuye el ángulo al anterior disponible en la pieza
+	 */
+	public void disminuyeAngulo(){
+		angulo-=1;
+		if (angulo<0) angulo=3;
 	}
 	
 	/**
