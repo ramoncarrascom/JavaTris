@@ -63,12 +63,8 @@ public class Tablero {
 		// Inicialización de la rejilla
 		rejilla = new int[vAncho][vAlto];
 		
-		// Inicializamos todos los valores a 0
-		for (int i=0; i<vAncho; i++) {
-			for (int n=0; n<vAlto; n++) {
-				rejilla[i][n]=0;
-			}
-		}
+		// Borramos su contenido, por si acaso
+		this.borra();
 		
 		// Cargamos la imagen del bloque
 		bloques = imagenBloque;
@@ -78,6 +74,19 @@ public class Tablero {
 		// Inicializamos vApplet
 		vApplet = miApplet;
 		
+	}
+	
+	/**
+	 * Inicializa el tablero y pone todas sus casillas a 0
+	 */
+	public void borra()
+	{
+		// Inicializamos todos los valores a 0
+		for (int i=0; i<vAncho; i++) {
+			for (int n=0; n<vAlto; n++) {
+				rejilla[i][n]=0;
+			}
+		}		
 	}
 	
 	/**
@@ -120,15 +129,25 @@ public class Tablero {
 	 * Dibuja el tablero en el objeto Graphics pasado como parámetro
 	 * @param g objeto de tipo Graphics sobre el que se dibujará el tablero
 	 */
-	public void dibujaTablero(Graphics g) {
+	public void dibuja(Graphics g)
+	{
+		dibuja(g, 0, 0);
+	}
+	/**
+	 * Dibuja el tablero en la posición indicada del objeto Graphics pasado como parámetro
+	 * @param g objeto de tipo Graphics sobre el que se dibujará el tablero
+	 * @param posX coordenada X de la posición del tablero
+	 * @param posY coordenada Y de la posición del tablero
+	 */
+	public void dibuja(Graphics g, int posX, int posY) {
 		
 		int imagenCorrespondiente;	// Indica el tipo de imagen dependiendo del tipo de celda
 		
 		g.setColor(Color.black);
-		g.drawLine(0, 0, 0, vAlto*bloqueAlto);
-		g.drawLine(0, 0, vAncho*bloqueAncho, 0);
-		g.drawLine(vAncho*bloqueAncho, 0, vAncho*bloqueAncho, vAlto*bloqueAlto);
-		g.drawLine(0, vAlto*bloqueAlto, vAncho*bloqueAncho, vAlto*bloqueAlto);
+		g.drawLine(posX, posY+bloqueAlto, posX, posY+(vAlto*bloqueAlto));
+		g.drawLine(posX, posY+bloqueAlto, posX+(vAncho*bloqueAncho), posY+bloqueAlto);
+		g.drawLine(posX+(vAncho*bloqueAncho), posY+bloqueAlto, posX+(vAncho*bloqueAncho), posY+(vAlto*bloqueAlto));
+		g.drawLine(posX, posY+(vAlto*bloqueAlto), posX+(vAncho*bloqueAncho), posY+(vAlto*bloqueAlto));
 		
 		for (int i=0; i<vAncho; i++) {
 			for (int n=0; n<vAlto; n++) {
@@ -142,7 +161,7 @@ public class Tablero {
 				}
 				
 				if (imagenCorrespondiente>=0)
-					g.drawImage(bloques[imagenCorrespondiente], i*bloqueAncho, n*bloqueAlto, vApplet);
+					g.drawImage(bloques[imagenCorrespondiente], posX+(i*bloqueAncho), posY+(n*bloqueAlto), vApplet);
 				
 			}
 		}
@@ -297,6 +316,24 @@ public class Tablero {
 	public int dameAlto()
 	{
 		return vAlto;
+	}
+	
+	/**
+	 * Devuelve el array de Image que contiene las imágenes de los bloques
+	 * @return Image[] con los bloques en uso
+	 */
+	public Image[] dameBloques()
+	{
+		return bloques;
+	}
+	
+	/**
+	 * Devuelve el applet en el que se encuentra instanciado el tablero
+	 * @return
+	 */
+	public Applet dameApplet()
+	{
+		return vApplet;
 	}
 	
 	/**

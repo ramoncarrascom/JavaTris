@@ -14,7 +14,7 @@ import javatris.tablero.*;
 /**
  * Applet de la aplicación
  * 
- * @author Ramon
+ * @author Ramon Carrasco Muñoz
  * @version 0.1 2017/05/15
  *
  */
@@ -73,7 +73,30 @@ public class Javatris extends Applet implements Runnable, KeyListener {
 	 * Pieza que está actualmente en juego
 	 */
 	private Pieza piezaActual;
-
+	
+	/**
+	 * Contiene la cola con las próximas 5 piezas que se van a jugar
+	 */
+	private ColaPiezas miCola;
+	
+	/**
+	 * Variable que almacena el estado en que se encuentra actualmente el juego. Valores:
+	 * 0 - El juego aún no ha empezado
+	 * 1 - El juego está en marcha
+	 * 2 - El juego ha terminado
+	 */
+	private int estadoJuego;
+	
+	/**
+	 * Nivel del juego
+	 */
+	private int nivel;
+	
+	/**
+	 * Puntos del usuario
+	 */
+	private int puntos;
+	
 	/**
 	 * Procedimiento init del Applet, inicializa los valores con los que vamos a trabajar
 	 */
@@ -91,13 +114,17 @@ public class Javatris extends Applet implements Runnable, KeyListener {
 		imagenDb = createImage(ancho, alto);
 		dobleBuffer = imagenDb.getGraphics();
 		
-		// Inicialización del intervalo de caída
-		intervaloCaida = 500;
+		// Inicialización del intervalo de caída, nivel y estado del juego
+		intervaloCaida = 600;
+		nivel = 1;
+		estadoJuego = 0;
+		puntos = 0;
 		
 		// Inicializamos los componentes y obtenemos la primera pieza
 		miTablero = new Tablero(anchoTablero,altoTablero,bloques,this);
+		miCola = new ColaPiezas(miTablero);
 		
-		piezaActual=new Catalogo(miTablero).damePiezaRnd();
+		piezaActual=miCola.damePieza();
 		
 		// Manejadores de eventos
 		addKeyListener(this);
@@ -115,7 +142,19 @@ public class Javatris extends Applet implements Runnable, KeyListener {
 		dobleBuffer.fillRect(0, 0, ancho, alto);
 		
 		dobleBuffer.setColor(Color.black);
-		miTablero.dibujaTablero(dobleBuffer);
+		miTablero.dibuja(dobleBuffer, 100, 50);
+		switch (estadoJuego)
+		{
+		case 0:		dobleBuffer.drawString("Pulse Espacio para comenzar",10,10);
+					break;
+		case 1: 	dobleBuffer.drawString("Nivel: " + nivel, 10, 50);
+					dobleBuffer.drawString("Puntos:" + puntos, 10, 80);
+					miCola.dibuja(dobleBuffer, 270, 100);
+					break;
+		case 2:		dobleBuffer.drawString("Juego terminado. Pulse Espacio para comenzar", 10, 10);	
+					break;
+		}
+		
 		
 		// dobleBuffer.drawString("X " + piezaActual.dameX() + " Y " + piezaActual.dameY(), 50, 50);
 		
@@ -170,7 +209,7 @@ public class Javatris extends Applet implements Runnable, KeyListener {
 	private void ciclo() {
 		comprobarSiSiguientePieza();
 		piezaActual.cae();
-		miTablero.dibujaPieza(piezaActual);
+		if (estadoJuego==1) miTablero.dibujaPieza(piezaActual);
 	}
 	
 	/**
@@ -178,10 +217,19 @@ public class Javatris extends Applet implements Runnable, KeyListener {
 	 * y obtiene la siguiente
 	 */
 	private void comprobarSiSiguientePieza(){
+		
+		int filasQuitadas;
+		
 		if (miTablero.colisionInferior(piezaActual)) {
+
 			miTablero.fijaPieza(piezaActual);
-			miTablero.quitaFilas();
-			piezaActual=new Catalogo(miTablero).damePiezaRnd();
+			filasQuitadas = miTablero.quitaFilas();
+			puntos = puntos + (filasQuitadas*10);
+			nivel = puntos / 200;
+			piezaActual=miCola.damePieza();
+			if (miTablero.haySuperposicion(piezaActual)) estadoJuego=2;
+			repaint();
+			
 		}
 	}
 	
@@ -190,10 +238,12 @@ public class Javatris extends Applet implements Runnable, KeyListener {
 	 */
 	public void run() {
 		while (true){
-			ciclo();
-			repaint();
-			try {Thread.sleep(intervaloCaida);}
+			if (estadoJuego==1) {
+				ciclo();
+				repaint();}
+			try {Thread.sleep(intervaloCaida-(25*nivel));}
 			catch (Exception e) {}
+			
 		}
 	}
 	
@@ -203,11 +253,49 @@ public class Javatris extends Applet implements Runnable, KeyListener {
 	public void start() {
 		caida = new Thread(this);
 		if (caida!=null) caida.start();
+		repaint();
 	}
 
 	@Override
-	public void keyPressed(KeyEvent e) {
-		// TODO Auto-generated method stub
+	public void keyPressed(KeyEvent evento) {
+		
+		char teclaChar=evento.getKeyChar();
+		int teclaCode=evento.getKeyCode();
+		if (estadoJuego==1)	
+		{
+			if (teclaChar=='a' | teclaCode==KeyEvent.VK_LEFT) 
+				if (!miTablero.colisionIzquierda(piezaActual))
+					piezaActual.ponPosicion(piezaActual.dameX()-1, piezaActual.dameY());
+				
+			if (teclaChar=='s' | teclaCode==KeyEvent.VK_DOWN) 
+				if (!miTablero.colisionInferior(piezaActual)){
+					comprobarSiSiguientePieza();
+					piezaActual.ponPosicion(piezaActual.dameX(), piezaActual.dameY()+1);
+				}				
+			
+			if (teclaChar=='d' | teclaCode==KeyEvent.VK_RIGHT) 
+				if (!miTablero.colisionDerecha(piezaActual))
+					piezaActual.ponPosicion(piezaActual.dameX()+1, piezaActual.dameY());
+			
+			if (teclaChar=='w' | teclaCode==KeyEvent.VK_UP | teclaCode==KeyEvent.VK_SPACE)
+			{
+				piezaActual.aumentaAngulo();
+				if (miTablero.haySuperposicion(piezaActual))
+					piezaActual.disminuyeAngulo();
+			}
+		}
+		if (teclaCode==KeyEvent.VK_SPACE)
+		{
+			if (estadoJuego==0 || estadoJuego==2)
+			{
+				estadoJuego=1;
+				miTablero.borra();
+			}
+			
+		}
+		
+		miTablero.dibujaPieza(piezaActual);
+		repaint();
 		
 	}
 
@@ -219,32 +307,7 @@ public class Javatris extends Applet implements Runnable, KeyListener {
 
 	@Override
 	public void keyTyped(KeyEvent evento) {
-		char tecla=evento.getKeyChar();
-		if (tecla=='w') 
-				piezaActual.ponPosicion(piezaActual.dameX(), piezaActual.dameY()-1);
-			
-		if (tecla=='a') 
-			if (!miTablero.colisionIzquierda(piezaActual))
-				piezaActual.ponPosicion(piezaActual.dameX()-1, piezaActual.dameY());
-			
-		if (tecla=='s') 
-			if (!miTablero.colisionInferior(piezaActual)){
-				comprobarSiSiguientePieza();
-				piezaActual.ponPosicion(piezaActual.dameX(), piezaActual.dameY()+1);
-			}				
 		
-		if (tecla=='d') 
-			if (!miTablero.colisionDerecha(piezaActual))
-				piezaActual.ponPosicion(piezaActual.dameX()+1, piezaActual.dameY());
 		
-		if (tecla=='z')
-		{
-			piezaActual.aumentaAngulo();
-			if (miTablero.haySuperposicion(piezaActual))
-				piezaActual.disminuyeAngulo();
-		}
-		
-		miTablero.dibujaPieza(piezaActual);
-		repaint();
 	}
 }

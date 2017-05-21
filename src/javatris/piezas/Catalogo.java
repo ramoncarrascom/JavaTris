@@ -8,7 +8,10 @@ import java.util.Random;
 import javatris.tablero.Tablero;
 
 /**
- * @author Ramon
+ * Catálogo de piezas disponibles para jugar
+ * 
+ * @author Ramon Carrasco Muñoz
+ * @version 0.1 2017/05/15
  *
  */
 public class Catalogo {

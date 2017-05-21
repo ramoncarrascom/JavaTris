@@ -107,5 +107,31 @@ public class Pieza {
 		posicionY+=1;
 	}
 	
+	/**
+	 * Devuelve el alto real de la pieza en su ángulo actual
+	 * @return número de casillas que ocupa en vertical
+	 */
+	public int dameAlto()
+	{
+		int[][] formaActual; 	// Array para almacenar la forma actual
+		int filaActual;			// contador para recorrer todas las filas de la forma
+		boolean encontrado;		// tomará valor true cuando se encuentre una fila con casilla
+		
+		formaActual=forma[angulo];
+		filaActual=5;
+		encontrado=false;
+		
+		while (!encontrado && filaActual>=1)
+		{
+			for (int columnaActual=1; columnaActual<=5; columnaActual++)
+				if (formaActual[filaActual-1][columnaActual-1]==1)
+					encontrado=true;
+			
+			if (!encontrado) filaActual--;
+		}
+		
+		return filaActual;
+	}
+	
 }
 
